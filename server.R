@@ -3,12 +3,11 @@ if (!require(quantmod)) {
 }
 
 from_dat <- as.Date("01/01/2015", format="%m/%d/%Y")
-# Download data for a stock if needed, and return the data
+# Download data for a stock if needed, then return that data
 require_symbol <- function(symbol, envir = parent.frame()) {
   if (is.null(envir[[symbol]])) {
     envir[[symbol]] <- getSymbols(symbol, auto.assign = FALSE, from = from_dat)
   }
-  
   envir[[symbol]]
 }
 
@@ -25,7 +24,9 @@ shinyServer(function(input, output) {
     symbol_data <- require_symbol(symbol, symbol_env)
     log_returns = diff(log(symbol_data[,4]))
     log_returns = log_returns[!is.na(log_returns)]
-    ggplot(data = log_returns, aes(log_returns)) + geom_histogram(binwidth = 1E-2, fill = 'white', color = 'black') + labs(x = "Log Returns", y = "Frequency", title = paste("Histogram of Log Returns", symbol, sep=" "))
+    ggplot(data = log_returns, aes(log_returns)) + 
+    geom_histogram(binwidth = 1E-2, fill = 'black', color = 'white') +
+    labs(x = "Log Returns", y = "Frequency", title = paste("Histogram of Log Returns for", symbol, sep=" "))
     
     # chartSeries(symbol_data,
     #             name      = symbol,

@@ -3,11 +3,11 @@ library(quantmod)
 library(ggplot2)
 
 shinyUI(pageWithSidebar(
-  headerPanel("Stocks"),
+  headerPanel("October Effect"),
   
   sidebarPanel(
     wellPanel(
-      p(strong("Stocks")),
+      p(strong("Stock Picker")),
       checkboxInput(inputId = "stock_aapl", label = "Apple (AAPL)",     value = FALSE),
       checkboxInput(inputId = "stock_msft", label = "Microsoft (MSFT)", value = FALSE),
       checkboxInput(inputId = "stock_ibm",  label = "IBM (IBM)",        value = FALSE),
@@ -31,8 +31,8 @@ shinyUI(pageWithSidebar(
   
   mainPanel(
     tabsetPanel(
-      tabPanel("Histogram", 
-               #use multiple conditions to control output
+      tabPanel("Log Returns Inspector", 
+               # use multiple conditions to control output
                conditionalPanel(condition = "input.stock_aapl",
                                 br(),
                                 div(plotOutput(outputId = "plot_aapl"))),
