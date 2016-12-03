@@ -25,7 +25,7 @@ shinyServer(function(input, output) {
     symbol_data <- require_symbol(symbol, symbol_env)
     log_returns = diff(log(symbol_data[,4]))
     log_returns = log_returns[!is.na(log_returns)]
-    ggplot(data = log_returns, aes(log_returns)) + geom_histogram(binwidth = 1E-2, fill = 'white', color = 'black') + labs(x = "Log Returns", y = "Frequency", title = "Histogram for Log Returns")
+    ggplot(data = log_returns, aes(log_returns)) + geom_histogram(binwidth = 1E-2, fill = 'white', color = 'black') + labs(x = "Log Returns", y = "Frequency", title = paste("Histogram of Log Returns", symbol, sep=" "))
     
     # chartSeries(symbol_data,
     #             name      = symbol,
