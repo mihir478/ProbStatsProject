@@ -14,19 +14,6 @@ shinyUI(pageWithSidebar(
       checkboxInput(inputId = "stock_goog", label = "Google (GOOG)",    value = FALSE),
       checkboxInput(inputId = "stock_yhoo", label = "Yahoo (YHOO)",     value = FALSE)
     )
-    
-    # selectInput(inputId = "chart_type",
-    #             label = "Chart type",
-    #             choices = c("Candlestick" = "candlesticks",
-    #                         "Matchstick" = "matchsticks",
-    #                         "Bar" = "bars",
-    #                         "Line" = "line")
-    # )
-    
-    #dateRangeInput(inputId = "daterange", label = "Date range",
-     #              start = Sys.Date() - 365, end = Sys.Date()),
-    
-    #checkboxInput(inputId = "log_y", label = "log y axis", value = FALSE)
   ),
   
   mainPanel(
@@ -35,25 +22,29 @@ shinyUI(pageWithSidebar(
                # use multiple conditions to control output
                conditionalPanel(condition = "input.stock_aapl",
                                 br(),
-                                div(plotOutput(outputId = "plot_aapl"))),
+                                div(plotOutput(outputId = "october_aapl_return")),
+                                div(plotOutput(outputId = "year_but_october_aapl_return"))),
                
                conditionalPanel(condition = "input.stock_msft",
                                 br(),
-                                div(plotOutput(outputId = "plot_msft"))),
+                                div(plotOutput(outputId = "october_msft_return")),
+                                div(plotOutput(outputId = "year_but_october_msft_return"))),
                
                conditionalPanel(condition = "input.stock_ibm",
                                 br(),
-                                div(plotOutput(outputId = "plot_ibm"))),
+                                div(plotOutput(outputId = "october_ibm_return")),
+                                div(plotOutput(outputId = "year_but_october_ibm_return"))),
                
                conditionalPanel(condition = "input.stock_goog",
                                 br(),
-                                div(plotOutput(outputId = "plot_goog"))),
+                                div(plotOutput(outputId = "october_goog_return")),
+                                div(plotOutput(outputId = "year_but_october_goog_return"))),
                
                conditionalPanel(condition = "input.stock_yhoo",
                                 br(),
-                                plotOutput(outputId = "plot_yhoo"))
-               ),
-      tabPanel("October Effect")
+                                div(plotOutput(outputId = "october_yhoo_return")),
+                                div(plotOutput(outputId = "year_but_october_yhoo_return")))
+               )
       # tabPanel("Normal Probability Plot"),
       # tabPanel("Confidence Interval"),
       # tabPanel("Regression")

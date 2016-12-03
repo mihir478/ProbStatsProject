@@ -1,0 +1,20 @@
+    
+    # selectInput(inputId = "chart_type",
+    #             label = "Chart type",
+    #             choices = c("Candlestick" = "candlesticks",
+    #                         "Matchstick" = "matchsticks",
+    #                         "Bar" = "bars",
+    #                         "Line" = "line")
+    # )
+    
+    #dateRangeInput(inputId = "daterange", label = "Date range",
+     #              start = Sys.Date() - 365, end = Sys.Date()),
+    
+    #checkboxInput(inputId = "log_y", label = "log y axis", value = FALSE)
+
+    # chartSeries(symbol_data,
+    #             name      = symbol,
+    #             type      = input$chart_type,
+    #             subset    = paste(input$daterange, collapse = "::"),
+    #             log.scale = input$log_y,
+    #             theme     = "white")
