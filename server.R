@@ -6,28 +6,46 @@ if (!require(quantmod)) {
 options("getSymbols.warning4.0"=FALSE)
 
 # Download data for a stock if needed, then return that data
-require_symbol <- function(symbol, oct_flag, envir = parent.frame()) {
-  # if october data is needed
+getDataForYear <- function(symbol, oct_flag, year) {
+  data <- NULL
+  if(oct_flag) {
+    from_date <- as.Date(paste("10/01/", year, sep=""), format="%m/%d/%Y")
+    to_date <- as.Date(paste("10/31/", year, sep=""), format="%m/%d/%Y")
+    data <- getSymbols(symbol, auto.assign = FALSE, from = from_date, to = to_date)
+    }  
+  else {
+    from_date_first <- as.Date(paste("01/01/", year, sep=""), format="%m/%d/%Y")
+    to_date_first <- as.Date(paste("09/30/", year, sep=""), format="%m/%d/%Y")
+    from_date_second <- as.Date(paste("11/01/", year, sep=""), format="%m/%d/%Y")
+    to_date_second <- as.Date(paste("12/01/", year, sep=""), format="%m/%d/%Y")
+    data <- merge(getSymbols(symbol, auto.assign = FALSE, from = from_date_first, to = to_date_first), 
+                  getSymbols(symbol, auto.assign = FALSE, from = from_date_second, to = to_date_second))
+  }
+  data
+}
+
+getDataForYearRange <- function(symbol, lowerYear, upperYear, oct_flag, envir = parent.frame()) {
   data_key <- NULL
   if(oct_flag) {
-    from_date <- as.Date("10/01/2015", format="%m/%d/%Y")
-    to_date <- as.Date("10/31/2015", format="%m/%d/%Y")
     data_key <- paste(symbol, "Oct", sep="")
-    if (is.null(envir[[data_key]])) {
-      envir[[data_key]] <- getSymbols(symbol, auto.assign = FALSE, from = from_date, to = to_date)
-    }  
-  } else {
-    from_date_first <- as.Date("01/01/2015", format="%m/%d/%Y")
-    to_date_first <- as.Date("09/30/2015", format="%m/%d/%Y")
-    from_date_second <- as.Date("11/01/2015", format="%m/%d/%Y")
-    to_date_second <- as.Date("12/31/2015", format="%m/%d/%Y")
+    } else {
     data_key <- paste(symbol, "yearButOct", sep="")
+  }
+  for (year in lowerYear : upperYear) {
     if (is.null(envir[[data_key]])) {
-      envir[[data_key]] <- merge(getSymbols(symbol, auto.assign = FALSE, from = from_date_first, to = to_date_first), 
-                                 getSymbols(symbol, auto.assign = FALSE, from = from_date_second, to = to_date_second))
+      envir[[data_key]] <- getDataForYear(symbol, oct_flag, year)
+    }
+    else {
+      prev_data <- envir[[data_key]]
+      envir[[data_key]] <- merge(getDataForYear(symbol, oct_flag, year), prev_data) 
     }
   }
   envir[[data_key]]
+}
+
+require_symbol <- function(symbol, oct_flag, symbol_env) {
+  data <- getDataForYearRange(symbol, 2006, 2015, oct_flag, symbol_env)
+  data
 }
 
 shinyServer(function(input, output) {
@@ -47,7 +65,6 @@ shinyServer(function(input, output) {
       date_range <- "Date Range: Jan-Sep and Nov-Dec, 2015"
     }
     symbol_data <- require_symbol(symbol, oct_flag, symbol_env)
-    head(symbol_data)
     log_returns = diff(log(symbol_data[,4]))
     log_returns = log_returns[!is.na(log_returns)]
     ggplot(data = log_returns, aes(log_returns)) + 
