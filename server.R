@@ -35,8 +35,7 @@ getDataForYear <- function(symbol, year, oct_flag, envir = parent.frame()) {
     envir[[data_key]] <- makeRequestForYear(symbol, oct_flag, year)
   }
   else {
-    prev_data <- envir[[data_key]]
-    envir[[data_key]] <- merge(getDataForYear(symbol, oct_flag, year), prev_data) 
+    envir[[data_key]] <- getDataForYear(symbol, oct_flag, year)
   }
   envir[[data_key]]
 }
@@ -58,9 +57,9 @@ shinyServer(function(input, output) {
   make_hist <- function(symbol, year, oct_flag) {
     date_range <- NULL
     if(oct_flag) {
-      date_range <- "Date Range: Oct, 2015"
+      date_range <- paste("Date Range: Oct, ", year, sep="")
     } else {
-      date_range <- "Date Range: Jan-Sep and Nov-Dec, 2015"
+      date_range <- paste("Date Range: Jan-Sep and Nov-Dec, ", year, sep="")
     }
     symbol_data <- require_symbol(symbol, year, oct_flag, symbol_env)
     log_returns = diff(log(symbol_data[,4]))
