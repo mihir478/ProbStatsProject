@@ -6,7 +6,7 @@ if (!require(quantmod)) {
 options("getSymbols.warning4.0"=FALSE)
 
 # Download data for a stock if needed, then return that data
-getDataForYear <- function(symbol, oct_flag, year) {
+makeRequestForYear <- function(symbol, oct_flag, year) {
   data <- NULL
   if(oct_flag) {
     from_date <- as.Date(paste("10/01/", year, sep=""), format="%m/%d/%Y")
@@ -24,27 +24,25 @@ getDataForYear <- function(symbol, oct_flag, year) {
   data
 }
 
-getDataForYearRange <- function(symbol, lowerYear, upperYear, oct_flag, envir = parent.frame()) {
+getDataForYear <- function(symbol, year, oct_flag, envir = parent.frame()) {
   data_key <- NULL
   if(oct_flag) {
     data_key <- paste(symbol, "Oct", sep="")
     } else {
     data_key <- paste(symbol, "yearButOct", sep="")
   }
-  for (year in lowerYear : upperYear) {
-    if (is.null(envir[[data_key]])) {
-      envir[[data_key]] <- getDataForYear(symbol, oct_flag, year)
-    }
-    else {
-      prev_data <- envir[[data_key]]
-      envir[[data_key]] <- merge(getDataForYear(symbol, oct_flag, year), prev_data) 
-    }
+  if (is.null(envir[[data_key]])) {
+    envir[[data_key]] <- makeRequestForYear(symbol, oct_flag, year)
+  }
+  else {
+    prev_data <- envir[[data_key]]
+    envir[[data_key]] <- merge(getDataForYear(symbol, oct_flag, year), prev_data) 
   }
   envir[[data_key]]
 }
 
-require_symbol <- function(symbol, oct_flag, symbol_env) {
-  data <- getDataForYearRange(symbol, 2006, 2015, oct_flag, symbol_env)
+require_symbol <- function(symbol, year, oct_flag, symbol_env) {
+  data <- getDataForYear(symbol, year, oct_flag, symbol_env)
   data
 }
 
@@ -57,14 +55,14 @@ shinyServer(function(input, output) {
   symbol_env <- new.env()
   
   # Make a histogram for a symbol, with the settings from the inputs
-  make_hist <- function(symbol, oct_flag) {
+  make_hist <- function(symbol, year, oct_flag) {
     date_range <- NULL
     if(oct_flag) {
       date_range <- "Date Range: Oct, 2015"
     } else {
       date_range <- "Date Range: Jan-Sep and Nov-Dec, 2015"
     }
-    symbol_data <- require_symbol(symbol, oct_flag, symbol_env)
+    symbol_data <- require_symbol(symbol, year, oct_flag, symbol_env)
     log_returns = diff(log(symbol_data[,4]))
     log_returns = log_returns[!is.na(log_returns)]
     ggplot(data = log_returns, aes(log_returns)) + 
@@ -72,15 +70,15 @@ shinyServer(function(input, output) {
     labs(x = "Log Returns", y = "Frequency", title = paste("Log Returns for", symbol, date_range, sep=" "))
   }
   
-  output$october_aapl_return <- renderPlot({ make_hist("AAPL", TRUE) })
-  output$october_msft_return <- renderPlot({ make_hist("MSFT", TRUE) })
-  output$october_ibm_return <- renderPlot({ make_hist("IBM", TRUE) })
-  output$october_goog_return <- renderPlot({ make_hist("GOOG", TRUE) })
-  output$october_yhoo_return <- renderPlot({ make_hist("YHOO", TRUE) })
+  output$october_aapl_return <- renderPlot({ make_hist("AAPL", 2015, TRUE) })
+  output$october_msft_return <- renderPlot({ make_hist("MSFT", 2015, TRUE) })
+  output$october_ibm_return <- renderPlot({ make_hist("IBM", 2015, TRUE) })
+  output$october_goog_return <- renderPlot({ make_hist("GOOG", 2015, TRUE) })
+  output$october_yhoo_return <- renderPlot({ make_hist("YHOO", 2015, TRUE) })
   
-  output$year_but_october_aapl_return <- renderPlot({ make_hist("AAPL", FALSE) })
-  output$year_but_october_msft_return <- renderPlot({ make_hist("MSFT", FALSE) })
-  output$year_but_october_ibm_return <- renderPlot({ make_hist("IBM", FALSE) })
-  output$year_but_october_goog_return <- renderPlot({ make_hist("GOOG", FALSE) })
-  output$year_but_october_yhoo_return <- renderPlot({ make_hist("YHOO", FALSE) })
+  output$year_but_october_aapl_return <- renderPlot({ make_hist("AAPL", 2015, FALSE) })
+  output$year_but_october_msft_return <- renderPlot({ make_hist("MSFT", 2015, FALSE) })
+  output$year_but_october_ibm_return <- renderPlot({ make_hist("IBM", 2015, FALSE) })
+  output$year_but_october_goog_return <- renderPlot({ make_hist("GOOG", 2015, FALSE) })
+  output$year_but_october_yhoo_return <- renderPlot({ make_hist("YHOO", 2015, FALSE) })
 })
