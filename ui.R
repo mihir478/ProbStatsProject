@@ -9,10 +9,7 @@ shinyUI(pageWithSidebar(
     wellPanel(
       p(strong("Stock Picker")),
       checkboxInput(inputId = "stock_aapl", label = "Apple (AAPL)",     value = FALSE),
-      checkboxInput(inputId = "stock_msft", label = "Microsoft (MSFT)", value = FALSE),
-      checkboxInput(inputId = "stock_ibm",  label = "IBM (IBM)",        value = FALSE),
-      checkboxInput(inputId = "stock_goog", label = "Google (GOOG)",    value = FALSE),
-      checkboxInput(inputId = "stock_yhoo", label = "Yahoo (YHOO)",     value = FALSE)
+      checkboxInput(inputId = "stock_msft", label = "Microsoft (MSFT)", value = FALSE)
     )
   ),
   

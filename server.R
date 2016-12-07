@@ -71,13 +71,7 @@ shinyServer(function(input, output) {
   
   output$october_aapl_return <- renderPlot({ make_hist("AAPL", 2015, TRUE) })
   output$october_msft_return <- renderPlot({ make_hist("MSFT", 2015, TRUE) })
-  output$october_ibm_return <- renderPlot({ make_hist("IBM", 2015, TRUE) })
-  output$october_goog_return <- renderPlot({ make_hist("GOOG", 2015, TRUE) })
-  output$october_yhoo_return <- renderPlot({ make_hist("YHOO", 2015, TRUE) })
   
   output$year_but_october_aapl_return <- renderPlot({ make_hist("AAPL", 2015, FALSE) })
   output$year_but_october_msft_return <- renderPlot({ make_hist("MSFT", 2015, FALSE) })
-  output$year_but_october_ibm_return <- renderPlot({ make_hist("IBM", 2015, FALSE) })
-  output$year_but_october_goog_return <- renderPlot({ make_hist("GOOG", 2015, FALSE) })
-  output$year_but_october_yhoo_return <- renderPlot({ make_hist("YHOO", 2015, FALSE) })
 })
