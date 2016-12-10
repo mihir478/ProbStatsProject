@@ -2,37 +2,34 @@
 options("getSymbols.warning4.0"=FALSE)
 
 # Makes data request to fetch stock data for a symbol over a year
-makeRequestForYear <- function(symbol, oct_flag, year) {
+makeRequestForYear <- function(symbol, nov_flag, year) {
   data <- NULL
-  if(oct_flag) {
-    from_date <- as.Date(paste("10/01/", year, sep=""), format="%m/%d/%Y")
-    to_date <- as.Date(paste("10/31/", year, sep=""), format="%m/%d/%Y")
+  if(nov_flag) {
+    from_date <- as.Date(paste("10/08/", year, sep=""), format="%m/%d/%Y")
+    to_date <- as.Date(paste("11/07/", year, sep=""), format="%m/%d/%Y")
     data <- getSymbols(symbol, auto.assign = FALSE, from = from_date, to = to_date)
     }  
   else {
-    from_date_first <- as.Date(paste("01/01/", year, sep=""), format="%m/%d/%Y")
-    to_date_first <- as.Date(paste("09/30/", year, sep=""), format="%m/%d/%Y")
-    from_date_second <- as.Date(paste("11/01/", year, sep=""), format="%m/%d/%Y")
-    to_date_second <- as.Date(paste("12/01/", year, sep=""), format="%m/%d/%Y")
-    data <- merge(getSymbols(symbol, auto.assign = FALSE, from = from_date_first, to = to_date_first), 
-                  getSymbols(symbol, auto.assign = FALSE, from = from_date_second, to = to_date_second))
+    from_date <- as.Date(paste("11/08/", year, sep=""), format="%m/%d/%Y")
+    to_date <- as.Date(paste("12/08/", year, sep=""), format="%m/%d/%Y")
+    data <- getSymbols(symbol, auto.assign = FALSE, from = from_date, to = to_date)
   }
   data
 }
 
 # Caches data to avoid expensive data requests
-getDataForYear <- function(symbol, year, oct_flag, envir = parent.frame()) {
+getDataForYear <- function(symbol, year, election_flag, envir = parent.frame()) {
   data_key <- NULL
-  if(oct_flag) {
-    data_key <- paste(symbol, "Oct", sep="")
+  if(election_flag) {
+    data_key <- paste(symbol, "Before", sep="")
     } else {
-    data_key <- paste(symbol, "yearButOct", sep="")
+    data_key <- paste(symbol, "After", sep="")
   }
   if (is.null(envir[[data_key]])) {
-    envir[[data_key]] <- makeRequestForYear(symbol, oct_flag, year)
+    envir[[data_key]] <- makeRequestForYear(symbol, election_flag, year)
   }
   else {
-    envir[[data_key]] <- getDataForYear(symbol, oct_flag, year)
+    envir[[data_key]] <- getDataForYear(symbol, election_flag, year)
   }
   envir[[data_key]]
 }
@@ -52,29 +49,19 @@ shinyServer(function(input, output) {
   symbol_env <- new.env()
   
   # Make a histogram for a symbol to investigate october effect
-  make_hist_oct <- function(symbol, year, oct_flag) {
+  make_hist_elec <- function(symbol, year, election_flag) {
     date_range <- NULL
-    if(oct_flag) {
-      date_range <- paste("- Date Range: Oct, ", year, sep="")
+    if(election_flag) {
+      date_range <- paste("- Date Range: Oct 8 - Nov 7, ", year, sep="")
     } else {
-      date_range <- paste("- Date Range: Jan-Sep and Nov-Dec, ", year, sep="")
+      date_range <- paste("- Date Range: Nov 8 - Dec 8, ", year, sep="")
     }
-    symbol_data <- getDataForYear(symbol, year, oct_flag, symbol_env)
+    symbol_data <- getDataForYear(symbol, year, election_flag, symbol_env)
     log_returns = diff(log(symbol_data[,4]))
     log_returns = log_returns[!is.na(log_returns)]
     ggplot(data = log_returns, aes(log_returns)) + 
       geom_histogram(binwidth = 1E-2, fill = "#428bca", color = "white") +
       labs(x = "Log Returns", y = "Frequency", title = paste(symbol, "Log Returns", date_range, sep=" "))
-  }
-  
-  # Make general histogram for a symbol 
-  make_hist <- function(symbol, year) {
-    symbol_data <- require_symbol(symbol, symbol_env)
-    log_returns = diff(log(symbol_data[,4]))
-    log_returns = log_returns[!is.na(log_returns)]
-    ggplot(data = log_returns, aes(log_returns)) + 
-      geom_histogram(binwidth = 1E-2, fill = "#428bca", color = "white") + 
-      labs(x = "Log Returns", y = "Frequency", title = paste(symbol, " Log Returns - Year: ", year, sep=""))
   }
   
   # Make Q-Q plot
@@ -84,9 +71,6 @@ shinyServer(function(input, output) {
     log_returns = log_returns[!is.na(log_returns)]
     qqnorm(log_returns, col="#428bca")
   }
-  
-  output$plot_aapl <- renderPlot({ make_hist("AAPL", 2015) })
-  output$plot_msft <- renderPlot({ make_hist("MSFT", 2015) })
   
   output$qqplot_aapl <- renderPlot({ make_qqplot("AAPL", 2015) })
   output$qqplot_msft <- renderPlot({ make_qqplot("MSFT", 2015) })
@@ -152,11 +136,11 @@ shinyServer(function(input, output) {
     tab
   })
   
-  output$october_aapl_return <- renderPlot({ make_hist_oct("AAPL", 2015, TRUE) })
-  output$october_msft_return <- renderPlot({ make_hist_oct("MSFT", 2015, TRUE) })
+  output$october_aapl_return <- renderPlot({ make_hist_elec("AAPL", 2015, TRUE) })
+  output$october_msft_return <- renderPlot({ make_hist_elec("MSFT", 2015, TRUE) })
   
-  output$year_but_october_aapl_return <- renderPlot({ make_hist_oct("AAPL", 2015, FALSE) })
-  output$year_but_october_msft_return <- renderPlot({ make_hist_oct("MSFT", 2015, FALSE) })
+  output$year_but_october_aapl_return <- renderPlot({ make_hist_elec("AAPL", 2015, FALSE) })
+  output$year_but_october_msft_return <- renderPlot({ make_hist_elec("MSFT", 2015, FALSE) })
   
   # Regression of a single stock against time
   reg_onestock <- function(symbol) {
@@ -169,7 +153,7 @@ shinyServer(function(input, output) {
   
   # One stock data with least-squares line
   reg_onestock_data_plot <- function(symbol) {
-    plot(reg_onestock(symbol)$model[1])
+    plot(reg_onestock(symbol)$model[1], ylab=symbol, xlab="time", main="One Stock Regression")
   }
   
   output$reg_onestock_data_plot_aapl <- renderPlot({reg_onestock_data_plot("AAPL")})
@@ -215,7 +199,7 @@ shinyServer(function(input, output) {
   
   # Two stocks data with least-squares line
   reg_twostocks_data_plot <- function(symbol1, symbol2) {
-    plot.zoo(reg_twostocks(symbol1, symbol2)$model[2], reg_twostocks(symbol1, symbol2)$model[1], main = "Two Stocks Regression", xlab = "Stock 2", ylab = "Stock 1")
+    plot.zoo(reg_twostocks(symbol1, symbol2)$model[2], reg_twostocks(symbol1, symbol2)$model[1], main = "Two Stocks Regression", xlab = symbol2, ylab = symbol1)
     abline(reg_twostocks(symbol1, symbol2))
   }
   # Two stocks data with least-squares line

@@ -2,14 +2,16 @@ if (!require("ggplot2"))
   install.packages("ggplot2")
 if(!require("quantmod")) 
   install.packages("quantmod")
+if(!require("shiny")) 
+  install.packages("shiny")
 
 library(shiny)
 library(quantmod)
 library(ggplot2)
 
-shinyUI(pageWithSidebar(
-  headerPanel("October Effect"),
-  
+shinyUI(fluidPage(theme="theme.css",
+  pageWithSidebar(
+  headerPanel("Election Volatility"),
   sidebarPanel(
     wellPanel(
       p(strong("Stock Picker")),
@@ -21,50 +23,40 @@ shinyUI(pageWithSidebar(
   
   mainPanel(
     tabsetPanel(
-      tabPanel("General Log Returns Inspector", 
-               #use multiple conditions to control output
-               conditionalPanel(condition = "input.stock_aapl",
-                                br(),
-                                div(plotOutput(outputId = "plot_aapl"))),
-               
-               conditionalPanel(condition = "input.stock_msft",
-                                br(),
-                                div(plotOutput(outputId = "plot_msft")))),
-      tabPanel("October Effect - Log Returns Inspector", 
-               # use multiple conditions to control output
-               conditionalPanel(condition = "input.stock_aapl",
-                                br(),
+      tabPanel("ElectionLog Returns Inspector", 
+               # Use multiple conditions to control output
+                conditionalPanel(condition = "input.stock_aapl",
                                 div(plotOutput(outputId = "october_aapl_return")),
-                                div(plotOutput(outputId = "year_but_october_aapl_return"))),
-               
-               conditionalPanel(condition = "input.stock_msft",
-                                br(),
+                                div(plotOutput(outputId = "year_but_october_aapl_return")),
+                                hr()),
+                conditionalPanel(condition = "input.stock_msft",
                                 div(plotOutput(outputId = "october_msft_return")),
-                                div(plotOutput(outputId = "year_but_october_msft_return")))
-      ),
+                                div(plotOutput(outputId = "year_but_october_msft_return")))),
       tabPanel("Q-Q Plot", 
                conditionalPanel(condition = "input.stock_aapl",
                                 br(),
-                                div(plotOutput(outputId = "qqplot_aapl"))), 
+                                div(plotOutput(outputId = "qqplot_aapl")),
+                                hr()), 
                conditionalPanel(condition = "input.stock_msft",
                                 br(),
                                 div(plotOutput(outputId = "qqplot_msft")))),
-      tabPanel("Confidence Interval for Mean and Variance of Log Returns",
+      tabPanel("Confidence Intervals for Returns",
                conditionalPanel(condition = "input.stock_aapl",
                                 br(),
-                                p(strong("Cofidence Interval for Mean of AAPL Returns")),
+                                p(strong("Confidence Interval for Mean of AAPL Returns")),
                                 div(textOutput(outputId = "ci_aapl"))),
-               conditionalPanel(condition = "input.stock_msft",
-                                br(),
-                                p(strong("Cofidence Interval for Mean of MSFT Returns")),
-                                div(textOutput(outputId = "ci_msft"))),
                conditionalPanel(condition = "input.stock_aapl",
                                 br(),
-                                p(strong("Cofidence Interval for Variances of AAPL Returns")),
-                                div(textOutput(outputId = "ci_var_aapl"))),
+                                p(strong("Confidence Interval for Variances of AAPL Returns")),
+                                div(textOutput(outputId = "ci_var_aapl")),
+                                hr()),
                conditionalPanel(condition = "input.stock_msft",
                                 br(),
-                                p(strong("Cofidence Interval for Variances of MSFT Returns")),
+                                p(strong("Confidence Interval for Mean of MSFT Returns")),
+                                div(textOutput(outputId = "ci_msft"))),
+               conditionalPanel(condition = "input.stock_msft",
+                                br(),
+                                p(strong("Confidence Interval for Variances of MSFT Returns")),
                                 div(textOutput(outputId = "ci_var_msft")))),
       
       tabPanel("Two Stocks Means Comparision",
@@ -72,18 +64,19 @@ shinyUI(pageWithSidebar(
                                 br(),
                                 strong("Test output:"),
                                 tableOutput(outputId = "aapl_msft_means"))),
-      tabPanel("Single Stock Returns Regression against Time",
+      tabPanel("Regression against Time",
                conditionalPanel(condition = "input.stock_aapl",
                                 br(),
                                 div(plotOutput(outputId = "reg_onestock_data_plot_aapl")),
                                 div(dataTableOutput(outputId = "reg_onestock_coeffs_aapl")),
-                                div(plotOutput(outputId = "reg_onestock_resid_plot_aapl"))),
+                                div(plotOutput(outputId = "reg_onestock_resid_plot_aapl")),
+                                hr()),
                conditionalPanel(condition = "input.stock_msft",
                                 br(),
                                 div(plotOutput(outputId = "reg_onestock_data_plot_msft")),
                                 div(dataTableOutput(outputId = "reg_onestock_coeffs_msft")),
                                 div(plotOutput(outputId = "reg_onestock_resid_plot_msft")))),
-      tabPanel("Two Stocks Returns Regression against Each Other",
+      tabPanel("Two Stocks Regression",
                conditionalPanel(condition = "input.stock_aapl && input.stock_msft",
                                 br(),
                                 plotOutput(outputId = "reg_twostocks_data_plot_aapl_msft"),
@@ -91,4 +84,4 @@ shinyUI(pageWithSidebar(
                                 plotOutput(outputId = "reg_twostocks_resid_plot_aapl_msft")))
     )
   )
-))
+)))
