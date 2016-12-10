@@ -175,11 +175,10 @@ shinyServer(function(input, output) {
   }
   output$reg_onestock_coeffs_aapl <- renderDataTable({
     coeffs = reg_onestock_coeffs("AAPL")
-  })
+  }, options=list(paging = FALSE, searching = FALSE))
   output$reg_onestock_coeffs_msft <- renderDataTable({
     coeffs = reg_onestock_coeffs("MSFT")
-  })
-  
+  }, options=list(paging = FALSE, searching = FALSE))
   
   # Regression of a two stocks against each other
   symbol_env1 <- new.env()
@@ -212,7 +211,7 @@ shinyServer(function(input, output) {
   # Two stocks regression intercept and slope estimates
   output$reg_twostocks_coeffs_aapl_msft <- renderDataTable({
     coeffs = reg_twostocks_coeffs("AAPL", "MSFT")
-  })
+  }, options = list(searching = FALSE, paging = FALSE))
   
   # Two stocks residuals plot
   # One stock residuals plot with least-squares line

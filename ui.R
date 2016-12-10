@@ -10,7 +10,17 @@ library(quantmod)
 library(ggplot2)
 
 shinyUI(fluidPage(theme="theme.css",
-  pageWithSidebar(
+  tags$head(
+    tags$style(HTML("
+h1 {
+  font-weight: 500;
+  line-height: 1.1;
+}
+hr {
+  width: 2px; 
+}
+"))
+  ),
   headerPanel("Election Volatility"),
   sidebarPanel(
     wellPanel(
@@ -23,7 +33,7 @@ shinyUI(fluidPage(theme="theme.css",
   
   mainPanel(
     tabsetPanel(
-      tabPanel("ElectionLog Returns Inspector", 
+      tabPanel("Returns", 
                # Use multiple conditions to control output
                 conditionalPanel(condition = "input.stock_aapl",
                                 div(plotOutput(outputId = "october_aapl_return")),
@@ -32,7 +42,7 @@ shinyUI(fluidPage(theme="theme.css",
                 conditionalPanel(condition = "input.stock_msft",
                                 div(plotOutput(outputId = "october_msft_return")),
                                 div(plotOutput(outputId = "year_but_october_msft_return")))),
-      tabPanel("Q-Q Plot", 
+      tabPanel("Q-Q", 
                conditionalPanel(condition = "input.stock_aapl",
                                 br(),
                                 div(plotOutput(outputId = "qqplot_aapl")),
@@ -40,7 +50,7 @@ shinyUI(fluidPage(theme="theme.css",
                conditionalPanel(condition = "input.stock_msft",
                                 br(),
                                 div(plotOutput(outputId = "qqplot_msft")))),
-      tabPanel("Confidence Intervals for Returns",
+      tabPanel("C.I.",
                conditionalPanel(condition = "input.stock_aapl",
                                 br(),
                                 p(strong("Confidence Interval for Mean of AAPL Returns")),
@@ -59,24 +69,28 @@ shinyUI(fluidPage(theme="theme.css",
                                 p(strong("Confidence Interval for Variances of MSFT Returns")),
                                 div(textOutput(outputId = "ci_var_msft")))),
       
-      tabPanel("Two Stocks Means Comparision",
+      tabPanel("Means Comp.",
                conditionalPanel(condition = "input.stock_aapl && input.stock_msft",
                                 br(),
                                 strong("Test output:"),
                                 tableOutput(outputId = "aapl_msft_means"))),
-      tabPanel("Regression against Time",
+      tabPanel("Time Regression",
                conditionalPanel(condition = "input.stock_aapl",
                                 br(),
                                 div(plotOutput(outputId = "reg_onestock_data_plot_aapl")),
+                                hr(),
                                 div(dataTableOutput(outputId = "reg_onestock_coeffs_aapl")),
+                                hr(),
                                 div(plotOutput(outputId = "reg_onestock_resid_plot_aapl")),
                                 hr()),
                conditionalPanel(condition = "input.stock_msft",
                                 br(),
                                 div(plotOutput(outputId = "reg_onestock_data_plot_msft")),
+                                hr(),
                                 div(dataTableOutput(outputId = "reg_onestock_coeffs_msft")),
+                                hr(),
                                 div(plotOutput(outputId = "reg_onestock_resid_plot_msft")))),
-      tabPanel("Two Stocks Regression",
+      tabPanel("Multi Stock Regression",
                conditionalPanel(condition = "input.stock_aapl && input.stock_msft",
                                 br(),
                                 plotOutput(outputId = "reg_twostocks_data_plot_aapl_msft"),
@@ -84,4 +98,4 @@ shinyUI(fluidPage(theme="theme.css",
                                 plotOutput(outputId = "reg_twostocks_resid_plot_aapl_msft")))
     )
   )
-)))
+))
