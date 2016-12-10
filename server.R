@@ -48,10 +48,6 @@ require_symbol <- function(symbol, envir = parent.frame()) {
 }
 
 shinyServer(function(input, output) {
-  # the link below introduces how to use environments in R
-  # http://adv-r.had.co.nz/Environments.html
-  # enviornment in R works somewhat similar as dictionary in Python
-  # in this case, symbol is the key and getSymbols(symbol) is the value
   # Create an environment for storing data
   symbol_env <- new.env()
   
@@ -81,7 +77,7 @@ shinyServer(function(input, output) {
       labs(x = "Log Returns", y = "Frequency", title = paste(symbol, " Log Returns - Year: ", year, sep=""))
   }
   
-  #make qqplot
+  # Make Q-Q plot
   make_qqplot <- function(symbol, year) {
     symbol_data <- require_symbol(symbol, symbol_env)
     log_returns = diff(log(symbol_data[,4]))
@@ -89,11 +85,9 @@ shinyServer(function(input, output) {
     qqnorm(log_returns, col="#428bca")
   }
   
-  #make histogram
   output$plot_aapl <- renderPlot({ make_hist("AAPL", 2015) })
   output$plot_msft <- renderPlot({ make_hist("MSFT", 2015) })
   
-  #make qqplot
   output$qqplot_aapl <- renderPlot({ make_qqplot("AAPL", 2015) })
   output$qqplot_msft <- renderPlot({ make_qqplot("MSFT", 2015) })
   
@@ -108,14 +102,13 @@ shinyServer(function(input, output) {
     #error <- qnorm((1-(input$cilevel/100))/2)*log_returns_sd/sqrt(sample_size)
     #need to be approximated as t-distribution since population variance is unknown
     error <- qt((1-(input$cilevel/100))/2, sample_size-1)*log_returns_sd/sqrt(sample_size)
-    ci <- log_returns_avg + c(-error, error)
+    ci <- log_returns_avg + c(-abs(error), abs(error))
     return(ci)
   }
-  #make ci
   output$ci_aapl <- renderPrint({get_ci("AAPL")})
   output$ci_msft <- renderPrint({get_ci("MSFT")})
   
-  #calculate C.I. for variances
+  # Calculate C.I. for variances
   get_ci_var <- function(symbol) {
     symbol_data <- require_symbol(symbol, symbol_env) 
     log_returns = diff(log(symbol_data[,4]))
@@ -130,11 +123,11 @@ shinyServer(function(input, output) {
     return(ci)
   }
   
-  # make ci for variances
+  # Make C.I. interval for variances
   output$ci_var_aapl <- renderPrint({get_ci_var("AAPL")})
   output$ci_var_msft <- renderPrint({get_ci_var("MSFT")})
   
-  # test the equality of the two population means with unknow population variances
+  # Test the equality of the two population means with unknow population variances
   symbol_env1 <- new.env()
   symbol_env2 <- new.env()
   test_pop_means <- function(symbol1, symbol2) {
@@ -150,7 +143,7 @@ shinyServer(function(input, output) {
     t.test(scale(log_returns1), scale(log_returns1))
   }
   
-  #output essential t-test results
+  # Output essential t-test results
   output$aapl_msft_means <- renderTable({
     mod = test_pop_means("AAPL", "MSFT")
     tab = matrix(c(mod$parameter,mod$statistic,mod$p.value),nrow=1)
@@ -165,7 +158,7 @@ shinyServer(function(input, output) {
   output$year_but_october_aapl_return <- renderPlot({ make_hist_oct("AAPL", 2015, FALSE) })
   output$year_but_october_msft_return <- renderPlot({ make_hist_oct("MSFT", 2015, FALSE) })
   
-  #regression of a single stock against time
+  # Regression of a single stock against time
   reg_onestock <- function(symbol) {
     symbol_data <- require_symbol(symbol, symbol_env) 
     log_returns = diff(log(symbol_data[,4]))
@@ -174,7 +167,7 @@ shinyServer(function(input, output) {
     lm = lm(formula = log_returns ~ time)
   }
   
-  #one stock data with least-squares line
+  # One stock data with least-squares line
   reg_onestock_data_plot <- function(symbol) {
     plot(reg_onestock(symbol)$model[1])
   }
@@ -182,7 +175,7 @@ shinyServer(function(input, output) {
   output$reg_onestock_data_plot_aapl <- renderPlot({reg_onestock_data_plot("AAPL")})
   output$reg_onestock_data_plot_msft <- renderPlot({reg_onestock_data_plot("MSFT")})
   
-  #one stock residuals plot with least-squares line
+  # One stock residuals plot with least-squares line
   reg_onestock_resid_plot <- function(symbol) {
     residuals = resid(reg_onestock(symbol))
     plot(reg_onestock(symbol)$model$time, residuals, ylab="Residuals", xlab="time", main="Residuals Plot")
@@ -191,13 +184,11 @@ shinyServer(function(input, output) {
   
   output$reg_onestock_resid_plot_aapl <- renderPlot({reg_onestock_resid_plot("AAPL")})
   output$reg_onestock_resid_plot_msft <- renderPlot({reg_onestock_resid_plot("MSFT")})
-
   
-  #one stock regression intercept and slope estimates
+  # One stock regression intercept and slope estimates
   reg_onestock_coeffs <- function(symbol) {
     summary(reg_onestock(symbol))$coefficients
   }
-  #show the output
   output$reg_onestock_coeffs_aapl <- renderDataTable({
     coeffs = reg_onestock_coeffs("AAPL")
   })
@@ -206,7 +197,7 @@ shinyServer(function(input, output) {
   })
   
   
-  #FUNCTION regression of a two stocks against each other
+  # Regression of a two stocks against each other
   symbol_env1 <- new.env()
   symbol_env2 <- new.env()
   reg_twostocks <- function(symbol1, symbol2) {
@@ -222,31 +213,31 @@ shinyServer(function(input, output) {
     lm = lm(formula = log_returns1 ~ log_returns2)
   }
   
-  #FUNCTION two stocks data with least-squares line
+  # Two stocks data with least-squares line
   reg_twostocks_data_plot <- function(symbol1, symbol2) {
     plot.zoo(reg_twostocks(symbol1, symbol2)$model[2], reg_twostocks(symbol1, symbol2)$model[1], main = "Two Stocks Regression", xlab = "Stock 2", ylab = "Stock 1")
     abline(reg_twostocks(symbol1, symbol2))
   }
-  #OUTPUT two stocks data with least-squares line
+  # Two stocks data with least-squares line
   output$reg_twostocks_data_plot_aapl_msft <- renderPlot({reg_twostocks_data_plot("AAPL", "MSFT")})
   
-  #FUNCTION two stocks regression intercept and slope estimates
+  # Two stocks regression intercept and slope estimates
   reg_twostocks_coeffs <- function(symbol1, symbol2) {
     summary(reg_twostocks(symbol1, symbol2))$coefficients
   }
-  #OUTPUT two stocks regression intercept and slope estimates
+  # Two stocks regression intercept and slope estimates
   output$reg_twostocks_coeffs_aapl_msft <- renderDataTable({
     coeffs = reg_twostocks_coeffs("AAPL", "MSFT")
   })
   
-  #FUNCTION two stocks residuals plot
-  #one stock residuals plot with least-squares line
+  # Two stocks residuals plot
+  # One stock residuals plot with least-squares line
   reg_twostocks_resid_plot <- function(symbol1, symbol2) {
     residuals = resid(reg_twostocks(symbol1, symbol2))
     plot(residuals, ylab="Residuals", xlab="Time", main="Residuals Plot")
     abline(reg_twostocks(symbol1, symbol2))
   }
-  #OUTPUT two stocks residules plot
+  # Two stocks residuals plot
   output$reg_twostocks_resid_plot_aapl_msft <- renderPlot({reg_twostocks_resid_plot("AAPL", "MSFT")})
 })
 
