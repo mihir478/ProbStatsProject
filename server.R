@@ -4,10 +4,10 @@ options("getSymbols.warning4.0"=FALSE)
 # Makes data request to fetch stock data for a symbol over a year
 makeRequestForYear <- function(symbol, election_flag) {
   data <- NULL
-  if(election_flag) {
-    from_date <- as.Date("07/19/2015", format="%m/%d/%Y")
+  if(election_flag == 1) {
+    from_date <- as.Date("07/19/2016", format="%m/%d/%Y")
     data <- getSymbols(symbol, auto.assign = FALSE, from = from_date)
-  } else {
+  } else if(election_flag == -1) {
     from_date <- as.Date("01/01/2016", format="%m/%d/%Y")
     to_date <- as.Date("07/18/2016", format="%m/%d/%Y")
     data <- getSymbols(symbol, auto.assign = FALSE, from = from_date, to = to_date)
@@ -18,9 +18,9 @@ makeRequestForYear <- function(symbol, election_flag) {
 # Caches data to avoid expensive data requests
 getDataForYear <- function(symbol, election_flag, envir = parent.frame()) {
   data_key <- NULL
-  if(election_flag) {
+  if(election_flag == -1) {
     data_key <- paste(symbol, "Before", sep="")
-    } else {
+  } else if(election_flag == 1) {
     data_key <- paste(symbol, "After", sep="")
   }
   if (is.null(envir[[data_key]])) {
@@ -34,11 +34,24 @@ getDataForYear <- function(symbol, election_flag, envir = parent.frame()) {
 
 # Makes data requests and caches responses for a symbol over a year
 require_symbol <- function(symbol, election_flag, envir = parent.frame()) {
-  from_date <- as.Date("01/01/2015", format="%m/%d/%Y")
+  data_key <- NULL
   if (is.null(envir[[symbol]])) {
-    envir[[symbol]] <- getSymbols(symbol, auto.assign = FALSE, from = from_date)
+    if(election_flag == 0) {
+      data_key <- symbol
+      from_date <- as.Date("01/01/2015", format="%m/%d/%Y")
+      envir[[data_key]] <- getSymbols(symbol, auto.assign = FALSE, from = from_date)
+    } else if(election_flag == -1) {
+      data_key <- paste(symbol, "Before", sep="")
+      from_date <- as.Date("07/19/2016", format="%m/%d/%Y")
+      envir[[data_key]] <- getSymbols(symbol, auto.assign = FALSE, from = from_date)
+    } else if(!election_flag == 1) {
+      data_key <- paste(symbol, "After", sep="")
+      from_date <- as.Date("01/01/2016", format="%m/%d/%Y")
+      to_date <- as.Date("07/18/2016", format="%m/%d/%Y")
+      envir[[data_key]] <- getSymbols(symbol, auto.assign = FALSE, from = from_date, to = to_date)
+    }
   }
-  envir[[symbol]]
+  envir[[data_key]]
 }
 
 shinyServer(function(input, output) {
@@ -48,9 +61,9 @@ shinyServer(function(input, output) {
   # Make a histogram for a symbol to investigate october effect
   make_hist_elec <- function(symbol, election_flag) {
     date_range <- NULL
-    if(election_flag) {
+    if(election_flag == 1) {
       date_range <- "- Date Range: July 19, 2016 - Today"
-    } else {
+    } else if (election_flag == -1) {
       date_range <- "- Date Range: Jan 1, 2016 - July 18, 2016"
     }
     symbol_data <- getDataForYear(symbol, election_flag, symbol_env)
@@ -63,7 +76,7 @@ shinyServer(function(input, output) {
   
   # Make Q-Q plot
   make_qqplot <- function(symbol) {
-    symbol_data <- require_symbol(symbol, symbol_env)
+    symbol_data <- require_symbol(symbol, 0, symbol_env)
     log_returns = diff(log(symbol_data[,4]))
     log_returns = log_returns[!is.na(log_returns)]
     qqnorm(log_returns, col="#428bca")
@@ -85,14 +98,14 @@ shinyServer(function(input, output) {
     ci <- log_returns_avg + c(-abs(error), abs(error))
     return(ci)
   }
-  output$ci_aapl_post_election_news <- renderPrint({get_ci("AAPL", TRUE)})
-  output$ci_xom_post_election_news <- renderPrint({get_ci("XOM", TRUE)})
-  output$ci_aapl_pre_election_news <- renderPrint({get_ci("AAPL", FALSE)})
-  output$ci_xom_pre_election_news <- renderPrint({get_ci("XOM", FALSE)})
+  output$ci_aapl_post_election_news <- renderText({get_ci("AAPL", 1)})
+  output$ci_xom_post_election_news <- renderText({get_ci("XOM", 1)})
+  output$ci_aapl_pre_election_news <- renderText({get_ci("AAPL", -1)})
+  output$ci_xom_pre_election_news <- renderText({get_ci("XOM", -1)})
   
   # Calculate C.I. for variances
   get_ci_var <- function(symbol, election_flag) {
-    symbol_data <- require_symbol(symbol, symbol_env) 
+    symbol_data <- require_symbol(symbol, election_flag, symbol_env) 
     log_returns = diff(log(symbol_data[,4]))
     log_returns = log_returns[!is.na(log_returns)]
     sample_size = length(log_returns)
@@ -106,17 +119,17 @@ shinyServer(function(input, output) {
   }
   
   # Make C.I. interval for variances
-  output$ci_var_aapl_post_election_news <- renderPrint({get_ci_var("AAPL", TRUE)})
-  output$ci_var_xom_post_election_news <- renderPrint({get_ci_var("XOM", TRUE)})
-  output$ci_var_aapl_pre_election_news <- renderPrint({get_ci_var("AAPL", FALSE)})
-  output$ci_var_xompre_election_news <- renderPrint({get_ci_var("XOM", FALSE)})
+  output$ci_var_aapl_post_election_news <- renderText({get_ci_var("AAPL", 1)})
+  output$ci_var_xom_post_election_news <- renderText({get_ci_var("XOM", 1)})
+  output$ci_var_aapl_pre_election_news <- renderText({get_ci_var("AAPL", -1)})
+  output$ci_var_xom_pre_election_news <- renderText({get_ci_var("XOM", -1)})
   
   # Test the equality of the two population means with unknow population variances
   symbol_env1 <- new.env()
   symbol_env2 <- new.env()
   test_pop_means <- function(symbol1, symbol2) {
-    symbol1_data <- require_symbol(symbol1, symbol_env1)
-    symbol2_data <- require_symbol(symbol2, symbol_env2)
+    symbol1_data <- require_symbol(symbol1, 0, symbol_env1)
+    symbol2_data <- require_symbol(symbol2, 0, symbol_env2)
     
     log_returns1 = diff(log(symbol1_data[,4]))
     log_returns1 = log_returns1[!is.na(log_returns1)]
@@ -136,15 +149,15 @@ shinyServer(function(input, output) {
     tab
   })
   
-  output$post_election_news_aapl_return <- renderPlot({ make_hist_elec("AAPL", TRUE) })
-  output$post_election_news_xom_return <- renderPlot({ make_hist_elec("XOM", TRUE) })
+  output$post_election_news_aapl_return <- renderPlot({ make_hist_elec("AAPL", 1) })
+  output$post_election_news_xom_return <- renderPlot({ make_hist_elec("XOM", 1) })
   
-  output$pre_election_news_aapl_return <- renderPlot({ make_hist_elec("AAPL", FALSE) })
-  output$pre_election_news_xom_return <- renderPlot({ make_hist_elec("XOM", FALSE) })
+  output$pre_election_news_aapl_return <- renderPlot({ make_hist_elec("AAPL", -1) })
+  output$pre_election_news_xom_return <- renderPlot({ make_hist_elec("XOM", -1) })
   
   # Regression of a single stock against time
   reg_onestock <- function(symbol) {
-    symbol_data <- require_symbol(symbol, symbol_env) 
+    symbol_data <- require_symbol(symbol, 0, symbol_env) 
     log_returns = diff(log(symbol_data[,4]))
     log_returns = log_returns[!is.na(log_returns)]
     time = seq(1, length(log_returns), 1)
@@ -184,8 +197,8 @@ shinyServer(function(input, output) {
   symbol_env1 <- new.env()
   symbol_env2 <- new.env()
   reg_twostocks <- function(symbol1, symbol2) {
-    symbol1_data <- require_symbol(symbol1, symbol_env1)
-    symbol2_data <- require_symbol(symbol2, symbol_env2)
+    symbol1_data <- require_symbol(symbol1, 0, symbol_env1)
+    symbol2_data <- require_symbol(symbol2, 0, symbol_env2)
     
     log_returns1 = diff(log(symbol1_data[,4]))
     log_returns1 = log_returns1[!is.na(log_returns1)]
