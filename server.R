@@ -35,22 +35,32 @@ getDataForYear <- function(symbol, election_flag, envir = parent.frame()) {
 # Makes data requests and caches responses for a symbol over a year
 require_symbol <- function(symbol, election_flag, envir = parent.frame()) {
   data_key <- NULL
-  if (is.null(envir[[symbol]])) {
     if(election_flag == 0) {
-      data_key <- symbol
+      data_key <- paste(symbol, "All", sep="")
       from_date <- as.Date("01/01/2015", format="%m/%d/%Y")
-      envir[[data_key]] <- getSymbols(symbol, auto.assign = FALSE, from = from_date)
+      if (is.null(envir[[data_key]])) {
+        envir[[data_key]] <- getSymbols(symbol, auto.assign = FALSE, from = from_date)
+      } else {
+        envir[[data_key]]
+      }
     } else if(election_flag == -1) {
       data_key <- paste(symbol, "Before", sep="")
       from_date <- as.Date("07/19/2016", format="%m/%d/%Y")
-      envir[[data_key]] <- getSymbols(symbol, auto.assign = FALSE, from = from_date)
-    } else if(!election_flag == 1) {
+      if (is.null(envir[[data_key]])) {
+        envir[[data_key]] <- getSymbols(symbol, auto.assign = FALSE, from = from_date)
+      } else {
+        envir[[data_key]]
+      }
+    } else if(election_flag == 1) {
       data_key <- paste(symbol, "After", sep="")
       from_date <- as.Date("01/01/2016", format="%m/%d/%Y")
       to_date <- as.Date("07/18/2016", format="%m/%d/%Y")
-      envir[[data_key]] <- getSymbols(symbol, auto.assign = FALSE, from = from_date, to = to_date)
+      if (is.null(envir[[data_key]])) {
+        envir[[data_key]] <- getSymbols(symbol, auto.assign = FALSE, from = from_date)
+      } else {
+        envir[[data_key]]
+      }
     }
-  }
   envir[[data_key]]
 }
 
