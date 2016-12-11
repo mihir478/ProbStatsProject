@@ -33,7 +33,7 @@ getDataForYear <- function(symbol, election_flag, envir = parent.frame()) {
 }
 
 # Makes data requests and caches responses for a symbol over a year
-require_symbol <- function(symbol, envir = parent.frame()) {
+require_symbol <- function(symbol, election_flag, envir = parent.frame()) {
   from_date <- as.Date("01/01/2015", format="%m/%d/%Y")
   if (is.null(envir[[symbol]])) {
     envir[[symbol]] <- getSymbols(symbol, auto.assign = FALSE, from = from_date)
@@ -73,8 +73,8 @@ shinyServer(function(input, output) {
   output$qqplot_xom <- renderPlot({ make_qqplot("XOM") })
   
   #calculate C.I. for mean returns
-  get_ci <- function(symbol) {
-    symbol_data <- require_symbol(symbol, symbol_env) 
+  get_ci <- function(symbol, election_flag) {
+    symbol_data <- require_symbol(symbol, election_flag, symbol_env) 
     log_returns = diff(log(symbol_data[,4]))
     log_returns = log_returns[!is.na(log_returns)]
     sample_size = length(log_returns)
@@ -85,11 +85,13 @@ shinyServer(function(input, output) {
     ci <- log_returns_avg + c(-abs(error), abs(error))
     return(ci)
   }
-  output$ci_aapl <- renderPrint({get_ci("AAPL")})
-  output$ci_xom <- renderPrint({get_ci("XOM")})
+  output$ci_aapl_post_election_news <- renderPrint({get_ci("AAPL", TRUE)})
+  output$ci_xom_post_election_news <- renderPrint({get_ci("XOM", TRUE)})
+  output$ci_aapl_pre_election_news <- renderPrint({get_ci("AAPL", FALSE)})
+  output$ci_xom_pre_election_news <- renderPrint({get_ci("XOM", FALSE)})
   
   # Calculate C.I. for variances
-  get_ci_var <- function(symbol) {
+  get_ci_var <- function(symbol, election_flag) {
     symbol_data <- require_symbol(symbol, symbol_env) 
     log_returns = diff(log(symbol_data[,4]))
     log_returns = log_returns[!is.na(log_returns)]
@@ -104,8 +106,10 @@ shinyServer(function(input, output) {
   }
   
   # Make C.I. interval for variances
-  output$ci_var_aapl <- renderPrint({get_ci_var("AAPL")})
-  output$ci_var_xom <- renderPrint({get_ci_var("XOM")})
+  output$ci_var_aapl_post_election_news <- renderPrint({get_ci_var("AAPL", TRUE)})
+  output$ci_var_xom_post_election_news <- renderPrint({get_ci_var("XOM", TRUE)})
+  output$ci_var_aapl_pre_election_news <- renderPrint({get_ci_var("AAPL", FALSE)})
+  output$ci_var_xompre_election_news <- renderPrint({get_ci_var("XOM", FALSE)})
   
   # Test the equality of the two population means with unknow population variances
   symbol_env1 <- new.env()
@@ -132,11 +136,11 @@ shinyServer(function(input, output) {
     tab
   })
   
-  output$october_aapl_return <- renderPlot({ make_hist_elec("AAPL", TRUE) })
-  output$october_xom_return <- renderPlot({ make_hist_elec("XOM", TRUE) })
+  output$post_election_news_aapl_return <- renderPlot({ make_hist_elec("AAPL", TRUE) })
+  output$post_election_news_xom_return <- renderPlot({ make_hist_elec("XOM", TRUE) })
   
-  output$year_but_october_aapl_return <- renderPlot({ make_hist_elec("AAPL", FALSE) })
-  output$year_but_october_xom_return <- renderPlot({ make_hist_elec("XOM", FALSE) })
+  output$pre_election_news_aapl_return <- renderPlot({ make_hist_elec("AAPL", FALSE) })
+  output$pre_election_news_xom_return <- renderPlot({ make_hist_elec("XOM", FALSE) })
   
   # Regression of a single stock against time
   reg_onestock <- function(symbol) {
