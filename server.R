@@ -137,9 +137,9 @@ shinyServer(function(input, output) {
   # Test the equality of the two population means with unknow population variances
   symbol_env1 <- new.env()
   symbol_env2 <- new.env()
-  test_pop_means <- function(symbol1, symbol2) {
-    symbol1_data <- require_symbol(symbol1, 0, symbol_env1)
-    symbol2_data <- require_symbol(symbol2, 0, symbol_env2)
+  test_pop_means <- function(symbol1, symbol2, same_time_period) {
+    symbol1_data <- require_symbol(symbol1, if(same_time_period) 0 else -1, symbol_env1)
+    symbol2_data <- require_symbol(symbol2, if(same_time_period) 0 else 1, symbol_env2)
     
     log_returns1 = diff(log(symbol1_data[,4]))
     log_returns1 = log_returns1[!is.na(log_returns1)]
@@ -151,8 +151,22 @@ shinyServer(function(input, output) {
   }
   
   # Output essential t-test results
+  output$aapl_aapl_means <- renderTable({
+    mod = test_pop_means("AAPL", "AAPL", FALSE)
+    tab = matrix(c(mod$parameter,mod$statistic,mod$p.value),nrow=1)
+    colnames(tab) = c("Degrees of Freedom","Test-Statistic","P-Value")
+    rownames(tab) = "Values"
+    tab
+  })
+  output$xom_xom_means <- renderTable({
+    mod = test_pop_means("XOM", "XOM", FALSE)
+    tab = matrix(c(mod$parameter,mod$statistic,mod$p.value),nrow=1)
+    colnames(tab) = c("Degrees of Freedom","Test-Statistic","P-Value")
+    rownames(tab) = "Values"
+    tab
+  })
   output$aapl_xom_means <- renderTable({
-    mod = test_pop_means("AAPL", "XOM")
+    mod = test_pop_means("AAPL", "XOM", TRUE)
     tab = matrix(c(mod$parameter,mod$statistic,mod$p.value),nrow=1)
     colnames(tab) = c("Degrees of Freedom","Test-Statistic","P-Value")
     rownames(tab) = "Values"
