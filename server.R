@@ -110,7 +110,7 @@ shinyServer(function(input, output) {
   output$qqplot_jpm <- renderPlot({ make_qqplot("JPM") })
   output$qqplot_ba <- renderPlot({ make_qqplot("BA") })
   
-  #calculate C.I. for mean returns
+  # Calculate C.I. for mean returns
   get_ci <- function(symbol, election_flag) {
     symbol_data <- require_symbol(symbol, election_flag, symbol_env) 
     log_returns = diff(log(symbol_data[,4]))
@@ -203,7 +203,6 @@ shinyServer(function(input, output) {
     tab
   })
   
-  
   # Regression of a single stock against time
   reg_onestock <- function(symbol) {
     symbol_data <- require_symbol(symbol, 0, symbol_env) 
@@ -285,7 +284,7 @@ shinyServer(function(input, output) {
   
   # Two stocks data with least-squares line
   reg_twostocks_data_plot <- function(symbol1, symbol2) {
-    plot.zoo(reg_twostocks(symbol1, symbol2)$model[2], reg_twostocks(symbol1, symbol2)$model[1], main = paste(symbol1, " Regression against SPY"), xlab = symbol2, ylab = symbol1)
+    plot.zoo(reg_twostocks(symbol1, symbol2)$model[2], reg_twostocks(symbol1, symbol2)$model[1], main = paste(symbol1, " Regression against S&P 500 (SPY)"), xlab = symbol2, ylab = symbol1)
     abline(reg_twostocks(symbol1, symbol2))
   }
   # Two stocks data with least-squares line
