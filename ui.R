@@ -4,10 +4,13 @@ if(!require("quantmod"))
   install.packages("quantmod")
 if(!require("shiny")) 
   install.packages("shiny")
+if(!require("rsconnect")) 
+  install.packages("rsconnect")
 
 library(shiny)
 library(quantmod)
 library(ggplot2)
+library(rsconnect)
 
 shinyUI(fluidPage(theme="theme.css",
                   tags$head(
